@@ -1,0 +1,31 @@
+/* src/commons/css/fonts.css */
+
+/* 
+  Tuodaan Google Fontsista:
+  - Jost: 300 (Light), 400 (Regular), 500 (Medium)
+  - Inter: 300 (Light), 400 (Regular), 500 (Medium)
+*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Jost:wght@300;400;500&display=swap');
+
+/* Apuluokat typografialle (näitä voit käyttää suoraan komponenteissa) */
+
+/* Luksus-otsikot (Corbè-tyyli) */
+.font-display {
+  font-family: var(--font-heading);
+  letter-spacing: var(--ls-wide);
+  font-weight: var(--fw-light);
+}
+
+/* Käyttöliittymäteksti (napit, linkit) */
+.font-ui {
+  font-family: var(--font-body);
+  letter-spacing: var(--ls-normal);
+  font-weight: var(--fw-regular);
+}
+
+/* Talousdata (tasalevyiset numerot) */
+.font-numbers {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-tight);
+}

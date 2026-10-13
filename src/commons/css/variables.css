@@ -1,0 +1,31 @@
+/* src/commons/css/variables.css */
+:root {
+  /* Väripaletti - Executive Sedan / Nightclub */
+  --c-base: #18181a;
+  --c-card: #221f20;
+  --c-accent: #8e3a33;
+  --c-copper: #7d4b3a;
+  --c-green: #5e8b5d;
+  --c-text: #dfdfdf;
+  --c-text-muted: #808080;
+  
+  /* Mitat */
+  --radius-sharp: 3px;
+
+  /* === TYPOGRAFIA === */
+  
+  /* Fonttiperheet */
+  --font-heading: 'Jost', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* Painot (Ei paksuja boldeja, vain elegantteja ohuita!) */
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+
+  /* Kirjainvälit (Kerning) */
+  --ls-tight: -0.02em;  /* Numerodatalle, pitää luvut kompakteina */
+  --ls-normal: 0em;     /* Normaalille leipätekstille */
+  --ls-wide: 0.05em;    /* Otsikoihin: tuo kalleuden tuntua */
+  --ls-lux: 0.15em;     /* Corbè-logoon ja todella isoihin elementteihin */
+}

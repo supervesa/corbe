@@ -1,0 +1,11 @@
+.corbe-card {
+  position: relative; background-color: var(--c-card);
+  border-radius: var(--radius-sharp); padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.corbe-card::before {
+  content: ""; position: absolute; inset: -1px;
+  border-radius: calc(var(--radius-sharp) + 1px);
+  background: linear-gradient(135deg, var(--c-copper) 0%, rgba(34, 31, 32, 0) 40%);
+  z-index: -1;
+}

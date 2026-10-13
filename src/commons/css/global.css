@@ -1,0 +1,41 @@
+/* src/commons/css/global.css */
+
+/* Tuodaan uudet fontti- ja muuttujatiedostot */
+@import './variables.css';
+@import './fonts.css';
+
+* { 
+  box-sizing: border-box; 
+}
+
+body {
+  margin: 0; 
+  min-height: 100vh;
+  
+  /* Puhdas, ohut fontin renderöinti mac OS / iOS */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Oletuksena käytetään UI-fonttia ja normaalia painoa */
+  font-family: var(--font-body);
+  font-weight: var(--fw-regular);
+  color: var(--c-text);
+  
+  /* Valaistus */
+  background: radial-gradient(circle at top right, #2a2a2d 0%, var(--c-base) 40%);
+  background-color: var(--c-base);
+  background-attachment: fixed;
+}
+
+/* Kaikki otsikot käyttävät arvokasta Jost-fonttia automaattisesti */
+h1, h2, h3, h4, h5, h6 { 
+  font-family: var(--font-heading);
+  font-weight: var(--fw-regular); 
+  letter-spacing: var(--ls-wide); 
+  margin: 0; 
+}
+
+a { 
+  color: var(--c-text); 
+  text-decoration: none; 
+}
