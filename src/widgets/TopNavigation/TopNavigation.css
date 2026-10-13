@@ -1,0 +1,168 @@
+/* src/widgets/TopNavigation/TopNavigation.css */
+
+.corbe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 3rem;
+    position: relative;
+    z-index: 100; /* Pysyy AINA mobiilivalikon päällä */
+    background-color: transparent;
+  }
+  
+  .corbe-logo-box {
+    border: 1px solid var(--c-text-muted);
+    padding: 0.4rem 1.2rem;
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    letter-spacing: var(--ls-lux);
+    color: var(--c-text);
+    z-index: 100;
+  }
+  
+  /* =========================================
+     DESKTOP NAVIGAATIO
+     ========================================= */
+  .corbe-desktop-nav {
+    display: flex;
+    gap: 2.5rem;
+  }
+  
+  .corbe-nav-item {
+    position: relative;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--c-text-muted);
+    cursor: pointer;
+    padding: 0.5rem 0;
+    transition: color 0.2s ease;
+  }
+  
+  .corbe-nav-item:hover, .corbe-nav-item.active {
+    color: var(--c-text);
+  }
+  
+  .corbe-nav-item.active {
+    border-bottom: 1px solid var(--c-accent);
+  }
+  
+  /* Pudotusvalikko (Polvi 2) */
+  .corbe-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+    background-color: var(--c-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 30px rgba(0,0,0,0.5);
+    display: none;
+    flex-direction: column;
+    padding: 0.5rem 0;
+    border-radius: var(--radius-sharp);
+  }
+  
+  .corbe-nav-item:hover > .corbe-dropdown {
+    display: flex;
+  }
+  
+  /* Sivuun aukeava valikko (Polvi 3) */
+  .corbe-sub-dropdown {
+    position: absolute;
+    top: -1px; /* Tasaa borderin kanssa */
+    left: 100%;
+    min-width: 200px;
+    background-color: var(--c-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: none;
+    flex-direction: column;
+    padding: 0.5rem 0;
+    border-radius: var(--radius-sharp);
+  }
+  
+  .corbe-dropdown-item {
+    position: relative;
+    padding: 0.75rem 1.5rem;
+    color: var(--c-text-muted);
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .corbe-dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: var(--c-copper);
+  }
+  
+  .corbe-dropdown-item:hover > .corbe-sub-dropdown {
+    display: flex;
+  }
+  
+  /* =========================================
+     HAMBURGER-IKONI (Nappi)
+     ========================================= */
+  .corbe-hamburger {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--c-text);
+    z-index: 100;
+    padding: 0.5rem;
+  }
+  
+  /* =========================================
+     MOBIILIVALIKKO (Full Screen Takeover)
+     ========================================= */
+  .corbe-mobile-takeover {
+    position: fixed;
+    inset: 0;
+    background-color: var(--c-base);
+    z-index: 90; /* Jää headerin alle, peittää muun ruudun! */
+    padding: 7rem 3rem 3rem 3rem; /* Tilaa headerille ylhäällä */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .corbe-mobile-takeover.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .corbe-mobile-item {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--c-text);
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+  }
+  
+  .corbe-mobile-sub {
+    display: flex;
+    flex-direction: column;
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--c-accent);
+    margin-top: 0.5rem;
+  }
+  
+  .corbe-mobile-sub-item {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    color: var(--c-text-muted);
+    padding: 0.8rem 0;
+  }
+  
+  /* =========================================
+     MEDIA QUERY (Mobiiliin taitto)
+     ========================================= */
+  @media (max-width: 768px) {
+    .corbe-header { padding: 1.5rem 1.5rem; }
+    .corbe-desktop-nav { display: none; }
+    .corbe-hamburger { display: block; }
+    .corbe-mobile-takeover { padding: 6rem 1.5rem 2rem 1.5rem; }
+  }
