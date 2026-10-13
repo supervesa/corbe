@@ -1,0 +1,82 @@
+/* src/ui/FlexTable/FlexTable.css */
+
+.corbe-ftable {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* =========================================
+     MOBIILI (Oletus) - Riveistä tulee kortteja
+     ========================================= */
+  .corbe-ftable-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background-color 0.2s ease;
+  }
+  
+  .corbe-ftable-cell {
+    display: flex;
+    justify-content: space-between; /* Etiketti vasemmalle, arvo oikealle */
+    align-items: center;
+  }
+  
+  /* Piilotetaan työpöydän yläotsikot mobiilissa */
+  .corbe-ftable-header { display: none; }
+  
+  /* Mobiilin apuotsikko (Label) jokaiselle solulle */
+  .corbe-ftable-mobile-label {
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wide);
+    margin-right: 1rem;
+  }
+  
+  /* Piilotetaan tietyt asiat mobiilissa jos halutaan (esim. pitkät kuvaukset) */
+  .hide-on-mobile { display: none !important; }
+  
+  /* =========================================
+     DESKTOP (Yli 768px) - Perinteinen datarivi
+     ========================================= */
+  @media (min-width: 768px) {
+    
+    .corbe-ftable-header {
+      display: flex;
+      flex-direction: row;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--c-card);
+    }
+  
+    .corbe-ftable-header-cell {
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      color: var(--c-text-muted);
+      text-transform: uppercase;
+      letter-spacing: var(--ls-wide);
+    }
+  
+    .corbe-ftable-row {
+      flex-direction: row;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      gap: 1rem; /* Sarakkeiden väli */
+    }
+  
+    .corbe-ftable-row:hover {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+  
+    .corbe-ftable-cell {
+      display: block; /* Poistetaan flex mobiilista */
+    }
+  
+    /* Piilotetaan mobiililabelit */
+    .corbe-ftable-mobile-label { display: none; }
+    
+    .hide-on-mobile { display: block !important; }
+  }

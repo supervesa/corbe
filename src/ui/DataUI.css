@@ -1,0 +1,82 @@
+/* src/ui/DataUI.css */
+
+/* === TAG / CHIP === */
+.corbe-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-sharp);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: var(--fw-medium);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  
+  /* Luksus-Tagien värit (Ohut reuna, hyvin läpinäkyvä tausta) */
+  .corbe-tag--default {
+    background: rgba(223, 223, 223, 0.05);
+    border: 1px solid rgba(223, 223, 223, 0.2);
+    color: var(--c-text-muted);
+  }
+  .corbe-tag--copper {
+    background: rgba(125, 75, 58, 0.1);
+    border: 1px solid rgba(125, 75, 58, 0.4);
+    color: #a86c57; /* Hieman kirkastettu kupari tekstiin */
+  }
+  .corbe-tag--green {
+    background: rgba(94, 139, 93, 0.1);
+    border: 1px solid rgba(94, 139, 93, 0.4);
+    color: #79ad78;
+  }
+  .corbe-tag--danger {
+    background: rgba(142, 58, 51, 0.1);
+    border: 1px solid rgba(142, 58, 51, 0.4);
+    color: #d16157;
+  }
+  
+  /* === TABLE === */
+  /* Kääre, joka pelastaa mobiilinäkymän */
+  .corbe-table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Sulava scrollaus iPhonella */
+    /* Kromiviiva ylös ja alas */
+    border-top: 1px solid var(--c-card);
+    border-bottom: 1px solid var(--c-card);
+  }
+  
+  .corbe-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    min-width: 700px; /* Pakottaa scrollin jos näyttö on alle 700px */
+  }
+  
+  .corbe-table th {
+    font-family: var(--font-heading);
+    font-weight: var(--fw-light);
+    font-size: 0.75rem;
+    letter-spacing: var(--ls-wide);
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    padding: 1rem;
+    border-bottom: 1px solid var(--c-card);
+  }
+  
+  .corbe-table td {
+    padding: 1rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    vertical-align: middle;
+  }
+  
+  /* Hover-efekti datariveille (yökerhon spottivalo pyyhkäisee rivin yli) */
+  .corbe-table tbody tr {
+    transition: background-color 0.2s ease;
+  }
+  .corbe-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
