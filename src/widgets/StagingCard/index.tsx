@@ -1,7 +1,8 @@
 import React from 'react';
 import './StagingCard.css';
 import { Sparkline } from '../../ui/Sparkline';
-import { Button } from '../../ui/Button'; // Tuodaan uusi komponentti
+import { Button } from '../../ui/Button';
+import { ambientBorder } from '../../commons/ambientBorder';
 
 interface Props { 
   name: string; 
@@ -15,7 +16,14 @@ export const StagingCard = ({ name, sector, trend, history }: Props) => {
   const lineColor = isPositive ? 'var(--c-green)' : 'var(--c-accent)';
 
   return (
-    <div className="corbe-card" style={{ display: 'flex', flexDirection: 'column' }}>
+    <div 
+      className="corbe-card" 
+      style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        ...ambientBorder()
+      }}
+    >
       
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
         <h3 className="font-display" style={{ margin: 0, fontSize: '1.1rem' }}>{name}</h3>
