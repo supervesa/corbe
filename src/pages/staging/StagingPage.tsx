@@ -1,49 +1,27 @@
-import React from 'react';
-import { StagingDataTable } from '../../widgets/StagingDataTable';
+import React, { useEffect, useState } from 'react';
+import { StagingDataTable, type FlatTickerData } from '../../widgets/StagingDataTable';
 import { StagingCardList } from '../../widgets/StagingCardList';
-
-// Taulukon esimerkkidata
-const mockFlatData = [
-  {
-    id: '1',
-    symbol: 'VALMT.HE',
-    name: 'Valmet Oyj',
-    status: 'pending',
-    price: 26.45,
-    meta: {
-      sector: 'Industrials',
-      baskets: { '1w': -2.10, '1m': 4.50, '6m': 12.0, '2y': 34.20 }
-    }
-  },
-  {
-    id: '2',
-    symbol: 'GOFORE.HE',
-    name: 'Gofore Oyj',
-    status: 'pending',
-    price: 18.20,
-    meta: {
-      sector: 'Technology',
-      baskets: { '1w': 1.20, '1m': 8.40, '6m': 5.20, '2y': 45.10 }
-    }
-  },
-  {
-    id: '3',
-    symbol: 'NESTE.HE',
-    name: 'Neste Oyj',
-    status: 'pending',
-    price: 24.10,
-    meta: {
-      sector: 'Energy',
-      baskets: { '1w': -4.20, '1m': -8.10, '6m': -15.4, '2y': -22.0 }
-    }
-  }
-];
+import { fetchPendingTickers } from '../../db/queries/staging';
+import { Loader } from '../../ui/Loader';
 
 export const StagingPage = () => {
+  const [data, setData] = useState<FlatTickerData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      const tickers = await fetchPendingTickers();
+      setData(tickers);
+      setIsLoading(false);
+    };
+
+    loadData();
+  }, []);
+
   return (
     <div style={{ padding: '0 1.5rem', maxWidth: '1200px', margin: '0 auto', paddingBottom: '4rem' }}>
       
-      {/* Pääotsikko */}
       <div style={{ marginBottom: '3rem', paddingTop: '2rem' }}>
         <h2 className="font-display" style={{ fontSize: '1.5rem', color: 'var(--c-text)', fontWeight: 'var(--fw-light)', marginBottom: '0.5rem' }}>
           Pending Discoveries
@@ -53,21 +31,29 @@ export const StagingPage = () => {
         </p>
       </div>
 
-      {/* 1. Osuus: Nätit graafikortit (Widgetit) */}
-      <div style={{ marginBottom: '4rem' }}>
-        <h3 className="font-display" style={{ fontSize: '1.1rem', color: 'var(--c-text-muted)', marginBottom: '1.5rem' }}>
-          Highlighted Trends
-        </h3>
-        <StagingCardList />
-      </div>
+      {isLoading ? (
+        <Loader />
+      ) : data.length > 0 ? (
+        <>
+          {/* Yläosan nostot (Kortit) */}
+          <div style={{ marginBottom: '4rem' }}>
+            <h3 className="font-display" style={{ fontSize: '1.1rem', color: 'var(--c-text-muted)', marginBottom: '1.5rem' }}>
+              Highlighted Trends
+            </h3>
+            <StagingCardList data={data} />
+          </div>
 
-      {/* 2. Osuus: Yksityiskohtainen taulukko */}
-      <div>
-        <h3 className="font-display" style={{ fontSize: '1.1rem', color: 'var(--c-text-muted)', marginBottom: '1.5rem' }}>
-          Detailed Analysis (All Discoveries)
-        </h3>
-        <StagingDataTable data={mockFlatData as any} />
-      </div>
+          {/* Ala-osan analyysi (Taulukko) */}
+          <div>
+            <h3 className="font-display" style={{ fontSize: '1.1rem', color: 'var(--c-text-muted)', marginBottom: '1.5rem' }}>
+              Detailed Analysis (All Discoveries)
+            </h3>
+            <StagingDataTable data={data} />
+          </div>
+        </>
+      ) : (
+        <p className="font-ui" style={{ color: 'var(--c-text-muted)' }}>No pending discoveries at the moment.</p>
+      )}
       
     </div>
   );

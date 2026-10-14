@@ -1,12 +1,14 @@
-// src/widgets/StagingCardList/index.tsx
 import React from 'react';
 import { StagingCard } from '../StagingCard';
+import type { FlatTickerData } from '../StagingDataTable'; // Tuodaan tyyppi
 
-export const StagingCardList = () => {
-  // Kuvitteellista käyrädataa (esim. viimeiset 30 päivää)
-  const dataValmet = [24, 25, 23.5, 26, 26.5, 25.8, 27, 28, 29.5];
-  const dataGofore = [18, 17.5, 17, 18, 19, 18.5, 19, 19.5, 19.2];
-  const dataNeste = [32, 31, 29, 27, 28, 26, 25.5, 24, 23]; // Laskeva trendi!
+interface Props {
+  data: FlatTickerData[];
+}
+
+export const StagingCardList = ({ data }: Props) => {
+  // Otetaan listasta vain 3 ensimmäistä osaketta "Highlight" -korteiksi
+  const topPicks = data.slice(0, 3);
 
   return (
     <div style={{ 
@@ -14,24 +16,29 @@ export const StagingCardList = () => {
       gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
       gap: '2rem' 
     }}>
-      <StagingCard 
-        name="Valmet Oyj" 
-        sector="Industrials" 
-        trend="+3.76%" 
-        history={dataValmet}
-      />
-      <StagingCard 
-        name="Gofore Oyj" 
-        sector="Technology" 
-        trend="+1.20%" 
-        history={dataGofore}
-      />
-      <StagingCard 
-        name="Neste Oyj" 
-        sector="Energy" 
-        trend="-4.20%" 
-        history={dataNeste}
-      />
+      {topPicks.map((item) => {
+        // 1. Muotoillaan 1 viikon trendi tekstiksi (esim. "+4.50%")
+        const trendVal = item.meta.baskets['1w'];
+        const trendString = `${trendVal > 0 ? '+' : ''}${trendVal.toFixed(2)}%`;
+
+        // 2. Koska Python-botti ei vielä tallenna oikeaa kurssihistoriaa kantaan,
+        // generoidaan nykyhinnan ympärille nätin näköinen satunnainen "fake" -käyrä.
+        // Tämän voi korvata myöhemmin esim: item.meta.history
+        const mockHistory = Array.from({ length: 15 }, (_, i) => {
+          const volatility = item.price * 0.05;
+          return item.price + (Math.sin(i) * volatility) + (trendVal > 0 ? i : -i);
+        });
+
+        return (
+          <StagingCard 
+            key={item.id}
+            name={item.name} 
+            sector={item.meta.sector} 
+            trend={trendString} 
+            history={mockHistory}
+          />
+        );
+      })}
     </div>
   );
 };
