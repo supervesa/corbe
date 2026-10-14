@@ -1,11 +1,10 @@
-import { supabase } from '../supabase';
+import { corbeClient } from '../corbeClient';
 import type { FlatTickerData } from '../../widgets/StagingDataTable';
 
 export async function fetchPendingTickers(): Promise<FlatTickerData[]> {
-  const { data, error } = await supabase
-    .from('staging_tickers') // Hakee nyt corbe.staging_tickers
+  const { data, error } = await corbeClient
+    .from('staging_tickers')
     .select('*')
-    .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -13,5 +12,10 @@ export async function fetchPendingTickers(): Promise<FlatTickerData[]> {
     return [];
   }
 
-  return data as FlatTickerData[];
+  if (!data) return [];
+
+  return data.map((row: any) => ({
+    ...row,
+    price: Number(row.price),
+  })) as FlatTickerData[];
 }

@@ -8,7 +8,7 @@ export interface FlatTickerData {
   id: string;
   symbol: string;
   name: string;
-  status: 'pending' | 'approved' | 'rejected';
+  // status: 'pending' | 'approved' | 'rejected'; <-- POISTA TÄMÄ RIVI
   price: number;
   meta: {
     sector: string;
