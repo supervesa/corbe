@@ -54,14 +54,15 @@ export const LoginPage = () => {
           }}>Corbè</div>
         </div>
 
-        {/* Lomake */}
-        <form onSubmit={handleLogin}>
+{/* Lomake */}
+<form onSubmit={handleLogin}>
           <Input 
             label="Email Address" 
             type="email" 
             placeholder="executive@nsg.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email" /* <-- LISÄTTY TÄMÄ */
             required
           />
           <Input 
@@ -70,6 +71,7 @@ export const LoginPage = () => {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password" /* <-- LISÄTTY TÄMÄ */
             required
           />
           
