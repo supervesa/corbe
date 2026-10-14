@@ -1,5 +1,6 @@
 // src/App.tsx
 import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './commons/css/global.css';
 
 import { SentinelProvider, useSentinel } from './contexts/SentinelContext';
@@ -8,26 +9,24 @@ import { StagingPage } from './pages/staging/StagingPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { Loader } from './ui/Loader';
 
-// Tämä komponentti sisältää varsinaisen reitityslogiikan
-const Gatekeeper = () => {
+// --- VÄLIAIKAISET PLACEHOLDER-SIVUT ---
+const AnalyticsDummy = () => <div style={{ padding: '0 3rem' }}><h2 className="font-display">Analytics Module</h2><p className="font-ui" style={{color: 'var(--c-text-muted)'}}>Coming soon...</p></div>;
+const PortfoliosDummy = () => <div style={{ padding: '0 3rem' }}><h2 className="font-display">Portfolios</h2><p className="font-ui" style={{color: 'var(--c-text-muted)'}}>Coming soon...</p></div>;
+
+// --- PORTINVARTIJA (Protected Route) ---
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { userProfile, isSentinelLoading, hasRole, hasModule } = useSentinel();
 
-  // 1. Lataus käynnissä
   if (isSentinelLoading) {
-    return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Loader />
-      </div>
-    );
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader /></div>;
   }
 
-  // 2. Ei kirjautunut -> Näytä Login
+  // Jos ei kirjautunut -> heitä login-sivulle
   if (!userProfile) {
-    return <LoginPage />;
+    return <Navigate to="/login" replace />;
   }
 
-  // 3. Kirjautunut, mutta ei oikeuksia!
-  // Vaaditaan 'superadmin' ja 'corbe' moduuli
+  // Jos ei oikeuksia -> näytä Access Denied
   if (!hasRole('superadmin') || !hasModule('corbe')) {
     return (
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -35,7 +34,7 @@ const Gatekeeper = () => {
         <h1 className="font-display" style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>ACCESS DENIED</h1>
         <p className="font-ui" style={{ color: 'var(--c-text-muted)' }}>Executive clearance required.</p>
         <button 
-          onClick={() => window.location.reload()} 
+          onClick={() => window.location.href = '/login'} 
           style={{ marginTop: '2rem', background: 'none', border: '1px solid var(--c-text-muted)', color: 'var(--c-text)', padding: '0.5rem 1rem', cursor: 'pointer' }}
         >
           Sign Out
@@ -44,19 +43,33 @@ const Gatekeeper = () => {
     );
   }
 
-  // 4. Kaikki kunnossa -> Pääsy myönnetty sovellukseen!
-  return (
-    <AppLayout>
-      <StagingPage />
-    </AppLayout>
-  );
+  // Pääsy myönnetty! Kääritään sivu AppLayout-kehykseen (jossa on valikko)
+  return <AppLayout>{children}</AppLayout>;
 };
 
-// Pääkomponentti käärii kaiken Provideriin
+
+// --- PÄÄSOVELLUS & REITITYS ---
 export default function App() {
   return (
-    <SentinelProvider>
-      <Gatekeeper />
-    </SentinelProvider>
+    <BrowserRouter>
+      <SentinelProvider>
+        <Routes>
+          
+          {/* Julkinen reitti */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Suojatut reitit */}
+          <Route path="/" element={<ProtectedRoute><Navigate to="/staging" replace /></ProtectedRoute>} />
+          
+          <Route path="/staging" element={<ProtectedRoute><StagingPage /></ProtectedRoute>} />
+          <Route path="/staging/*" element={<ProtectedRoute><StagingPage /></ProtectedRoute>} />
+          
+          <Route path="/analytics" element={<ProtectedRoute><AnalyticsDummy /></ProtectedRoute>} />
+          
+          <Route path="/portfolios/*" element={<ProtectedRoute><PortfoliosDummy /></ProtectedRoute>} />
+
+        </Routes>
+      </SentinelProvider>
+    </BrowserRouter>
   );
 }
