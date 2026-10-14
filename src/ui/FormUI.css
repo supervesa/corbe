@@ -1,0 +1,78 @@
+.corbe-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.5rem;
+  }
+  
+  .corbe-label {
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wide);
+    margin-bottom: 0.5rem;
+  }
+  
+  .corbe-input {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sharp);
+    padding: 0.8rem 1rem;
+    color: var(--c-text);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+  
+  .corbe-input:focus {
+    border-color: var(--c-copper);
+    background-color: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 0 15px rgba(125, 75, 58, 0.15);
+  }
+  
+  .corbe-input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .corbe-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+  }
+  
+  .corbe-checkbox {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    background-color: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  
+  .corbe-checkbox:checked {
+    background-color: var(--c-copper);
+    border-color: var(--c-copper);
+  }
+  
+  .corbe-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  
+  .corbe-checkbox-label {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    color: var(--c-text-muted);
+  }
