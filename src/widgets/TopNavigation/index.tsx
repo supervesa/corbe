@@ -38,6 +38,12 @@ const menuData: MenuItem[] = [
         ]
       }
     ]
+  },
+  {
+    label: 'System',
+    children: [
+      { label: 'Configuration', path: '/settings' }
+    ]
   }
 ];
 

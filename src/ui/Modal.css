@@ -1,0 +1,78 @@
+/* src/ui/Modal.css */
+
+/* Taustan tummennus */
+.corbe-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.85); /* Syvä, lähes musta peitto */
+    backdrop-filter: blur(4px); /* Pieni sumennus taustalle */
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+  }
+  
+  /* Itse sisältölaatikko (Työpöytä) */
+  .corbe-modal-content {
+    background-color: var(--c-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    border-radius: var(--radius-sharp);
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.2s ease-out;
+    overflow: hidden;
+  }
+  
+  /* Yläpalkki */
+  .corbe-modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  /* Sisältöalue */
+  .corbe-modal-body {
+    padding: 2rem;
+    overflow-y: auto;
+    max-height: 70vh;
+  }
+  
+  /* =========================================
+     MOBIILINÄKYMÄ (Full Screen Takeover)
+     ========================================= */
+  @media (max-width: 768px) {
+    .corbe-modal-content {
+      max-width: 100%;
+      height: 100%;
+      max-height: 100vh;
+      border-radius: 0; /* Terävät kulmat koko ruudulla */
+      border: none;
+      animation: slideUpMobile 0.3s ease-out;
+    }
+    
+    .corbe-modal-body {
+      max-height: calc(100vh - 80px); /* Jättää tilaa headerille */
+    }
+  }
+  
+  /* Animaatiot */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes slideUpMobile {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
