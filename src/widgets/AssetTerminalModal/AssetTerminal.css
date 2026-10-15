@@ -1,0 +1,83 @@
+.terminal-container {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+  }
+  
+  .terminal-header {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Välilehdet (Mobiili & Desktop) */
+  .terminal-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.3rem;
+    border-radius: var(--radius-sharp);
+    margin-bottom: 1.5rem;
+  }
+  
+  .terminal-tab-btn {
+    flex: 1;
+    padding: 0.6rem;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    letter-spacing: 0.1em;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+  }
+  
+  .terminal-tab-btn.active {
+    background: var(--c-copper);
+    color: #fff;
+  }
+  
+  .terminal-tab-btn.inactive {
+    background: transparent;
+    color: var(--c-text-muted);
+  }
+  
+  /* Kaksi saraketta Desktopilla (Jos tilaa on) */
+  .terminal-content-split {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    height: 100%;
+  }
+  
+  @media (min-width: 768px) {
+    .terminal-tabs {
+      display: none; /* Työpöydällä ei tarvita välilehtiä, näytetään rinnakkain */
+    }
+    .terminal-content-split {
+      flex-direction: row;
+    }
+    .terminal-col-left {
+      flex: 1.2;
+      padding-right: 2rem;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .terminal-col-right {
+      flex: 1;
+    }
+  }
+  
+  /* Mobiilinatiivi sisältöalue */
+  .terminal-tab-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2rem;
+  }
+  
+  .terminal-panel {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sharp);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
