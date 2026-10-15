@@ -8,6 +8,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { AppLayout } from './layouts/AppLayout';
 import { WalletPage } from './pages/wallet/WalletPage';
 import { StagingPage } from './pages/staging/StagingPage';
+import { ArchivedPortfolioPage } from './pages/portfolios/ArchivedPortfolioPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { Loader } from './ui/Loader';
@@ -86,6 +87,8 @@ export default function App() {
             <Route path="/analytics" element={<ProtectedRoute><AnalyticsDummy /></ProtectedRoute>} />3
 
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+
+            <Route path="/portfolios/archived" element={<ProtectedRoute><ArchivedPortfolioPage /></ProtectedRoute>} />
 
           </Routes>
         </ToastProvider> 

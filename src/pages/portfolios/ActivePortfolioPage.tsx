@@ -20,99 +20,95 @@ export const ActivePortfolioPage = () => {
   const [isStrict, setIsStrict] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Kaupankäynti-Modaalin tilat
+  // Modaalin tilat
   const [tradeTarget, setTradeTarget] = useState<PortfolioTicker | null>(null);
+  const [tradeMode, setTradeMode] = useState<'buy' | 'sell'>('buy');
   const [tradeAmount, setTradeAmount] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Ladataan kaikki data (Salkku, Lompakko, Asetukset)
   const loadData = async () => {
     if (!userProfile?.id) return;
     setIsLoading(true);
-    
     const [portfolio, ledger, settings] = await Promise.all([
       fetchActivePortfolio(userProfile.id),
       fetchWalletLedger(userProfile.id),
       fetchUserSettings(userProfile.id)
     ]);
-
     setData(portfolio);
-    
-    // Lasketaan lompakon saldo euroina
-    const balanceEur = ledger.reduce((sum, t) => sum + t.amount_snt, 0) / 100;
-    setWalletBalance(balanceEur);
-    
+    setWalletBalance(ledger.reduce((sum, t) => sum + t.amount_snt, 0) / 100);
     setIsStrict(settings.strict_wallet_mode);
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    loadData();
-  }, [userProfile?.id]);
+  useEffect(() => { loadData(); }, [userProfile?.id]);
 
   // --- KAUPANKÄYNTILOGIIKKA ---
+  // Simuloidaan markkinahinta tässä kokeilua varten (Python hoitaa oikeasti myöhemmin)
+  const currentMarketPrice = 30.50; 
   
-  // Koska Python-botti ei vielä päivitä reaaliaikaisia hintoja kantaan, 
-  // simuloidaan markkinahinta tässä kokeilua varten (esim. 25.50€)
-  const currentMarketPrice = 25.50; 
-  
-  const numericAmount = parseFloat(tradeAmount) || 0;
-  const estimatedShares = numericAmount > 0 ? numericAmount / currentMarketPrice : 0;
-  
-  // Voiko kaupan tehdä? (Jos strict mode päällä, saldo ei saa mennä pakkaselle)
-  const canAfford = !isStrict || walletBalance >= numericAmount;
-  const isTradeValid = numericAmount > 0 && canAfford;
+  const currentShares = tradeTarget ? Number(tradeTarget.shares) : 0;
+  const avgPrice = tradeTarget ? Number(tradeTarget.average_buy_price) : 0;
+  const isSell = tradeMode === 'sell';
+  const numericInput = parseFloat(tradeAmount) || 0;
+
+  // LASKENTA (Riippuu ollaanko ostamassa vai myymässä)
+  let estimatedShares = 0;
+  let estimatedEur = 0;
+  let profitLoss = 0;
+  let profitLossPercent = 0;
+
+  if (isSell) {
+    // Myydessä input on KAPPALEMÄÄRÄ
+    estimatedShares = numericInput;
+    estimatedEur = estimatedShares * currentMarketPrice;
+    profitLoss = (currentMarketPrice - avgPrice) * estimatedShares;
+    profitLossPercent = avgPrice > 0 ? ((currentMarketPrice - avgPrice) / avgPrice) * 100 : 0;
+  } else {
+    // Ostaessa input on EUROT
+    estimatedEur = numericInput;
+    estimatedShares = currentMarketPrice > 0 ? numericInput / currentMarketPrice : 0;
+  }
+
+  // TARKISTUKSET
+  const canAfford = !isStrict || walletBalance >= estimatedEur;
+  let isTradeValid = false;
+  if (isSell) {
+    isTradeValid = numericInput > 0 && numericInput <= currentShares;
+  } else {
+    isTradeValid = numericInput > 0 && canAfford;
+  }
 
   const handleExecuteTrade = async () => {
     if (!userProfile?.id || !tradeTarget || !isTradeValid) return;
     setIsProcessing(true);
 
     const { error } = await executeTrade(
-      userProfile.id,
-      tradeTarget.id,
-      tradeTarget.symbol,
-      numericAmount,
-      estimatedShares,
-      Number(tradeTarget.shares) || 0,
-      Number(tradeTarget.average_buy_price) || 0
+      userProfile.id, tradeTarget.id, tradeTarget.symbol,
+      tradeMode, estimatedEur, estimatedShares,
+      currentShares, avgPrice
     );
 
     if (error) {
       showToast('ERROR', 'Trade execution failed.', 'error');
     } else {
-      showToast('ORDER FILLED', `${estimatedShares.toFixed(3)} shares of ${tradeTarget.symbol} acquired.`, 'success');
+      showToast('ORDER FILLED', `${tradeMode.toUpperCase()} executed for ${tradeTarget.symbol}.`, 'success');
       setTradeTarget(null);
       setTradeAmount('');
-      await loadData(); // Päivitetään ruudun luvut heti!
+      await loadData();
     }
     setIsProcessing(false);
   };
 
-  // --- TAULUKON SARAKKEET ---
   const columns: ColumnDef<PortfolioTicker>[] = [
-    {
-      header: 'Asset (Symbol)',
-      flex: 2,
-      render: (row) => <Text variant="primary" tabular>{row.symbol}</Text>
-    },
-    {
-      header: 'Shares',
-      flex: 1,
-      render: (row) => <Text tabular>{Number(row.shares).toFixed(3)}</Text>
-    },
-    {
-      header: 'Avg Buy Price',
-      flex: 1,
-      render: (row) => <Text tabular>€{Number(row.average_buy_price).toFixed(2)}</Text>
-    },
-    {
-      header: '',
-      flex: 1,
-      align: 'right',
-      render: (row) => (
-        <Button variant="secondary" size="sm" onClick={() => setTradeTarget(row)}>
-          Trade
-        </Button>
+    { header: 'Asset', flex: 2, render: (row) => <Text variant="primary" tabular>{row.symbol}</Text> },
+    { header: 'Shares', flex: 1, render: (row) => <Text tabular>{Number(row.shares).toFixed(3)}</Text> },
+    { header: 'Avg Price', flex: 1, render: (row) => <Text tabular>€{Number(row.average_buy_price).toFixed(2)}</Text> },
+    { header: '', flex: 1, align: 'right', render: (row) => (
+        <Button variant="secondary" size="sm" onClick={() => { 
+          setTradeTarget(row); 
+          setTradeAmount(''); 
+          setTradeMode('buy'); // Oletuksena aina osto
+        }}>Trade</Button>
       )
     }
   ];
@@ -121,11 +117,7 @@ export const ActivePortfolioPage = () => {
     <div style={{ padding: '0 1.5rem', maxWidth: '1200px', margin: '0 auto', paddingBottom: '4rem' }}>
       <section style={{ marginBottom: '3.5rem', paddingTop: '2rem' }}>
         <Heading level={2} spacing="sm">Active Portfolio</Heading>
-        <Prose rule>
-          <Text as="p" variant="muted" weight="light">
-            Assets promoted from the staging buffer. These instruments are currently active and awaiting capital allocation.
-          </Text>
-        </Prose>
+        <Prose rule><Text as="p" variant="muted" weight="light">Assets promoted from the staging buffer.</Text></Prose>
       </section>
 
       {isLoading ? <Loader /> : data.length > 0 ? (
@@ -135,71 +127,78 @@ export const ActivePortfolioPage = () => {
       )}
 
       {/* --- KAUPANKÄYNTI-MODAALI --- */}
-      <Modal 
-        isOpen={!!tradeTarget} 
-        title={`Execute Trade: ${tradeTarget?.symbol}`} 
-        onClose={() => { setTradeTarget(null); setTradeAmount(''); }}
-      >
+      <Modal isOpen={!!tradeTarget} title={`${tradeTarget?.symbol}`} onClose={() => { setTradeTarget(null); setTradeAmount(''); }}>
         {tradeTarget && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             
-            {/* Lompakon tila & Asetukset */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 'var(--radius-sharp)' }}>
-              <div>
-                <Text variant="muted" size="sm" style={{ textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>Available Liquidity</Text>
-                <Text tabular size="lg" variant={isStrict && walletBalance < numericAmount ? 'accent' : 'primary'}>
-                  €{walletBalance.toFixed(2)}
+            {/* BUY / SELL - KYTKIN */}
+            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '0.3rem', borderRadius: 'var(--radius-sharp)' }}>
+              <button 
+                style={{ flex: 1, padding: '0.6rem', border: 'none', borderRadius: '2px', cursor: 'pointer', fontFamily: 'var(--font-heading)', letterSpacing: '0.1em',
+                  background: !isSell ? 'var(--c-copper)' : 'transparent', color: !isSell ? '#fff' : 'var(--c-text-muted)' }}
+                onClick={() => { setTradeMode('buy'); setTradeAmount(''); }}
+              >BUY</button>
+              <button 
+                style={{ flex: 1, padding: '0.6rem', border: 'none', borderRadius: '2px', fontFamily: 'var(--font-heading)', letterSpacing: '0.1em',
+                  background: isSell ? 'var(--c-copper)' : 'transparent', color: isSell ? '#fff' : 'var(--c-text-muted)',
+                  cursor: currentShares > 0 ? 'pointer' : 'not-allowed', opacity: currentShares > 0 ? 1 : 0.4 }}
+                onClick={() => { if(currentShares > 0) { setTradeMode('sell'); setTradeAmount(''); } }}
+                disabled={currentShares <= 0}
+              >SELL</button>
+            </div>
+
+            {/* SYÖTTÖKENTTÄ */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Text variant="muted" size="sm" style={{ textTransform: 'uppercase' }}>
+                  {isSell ? 'Amount (Shares)' : 'Investment (EUR)'}
+                </Text>
+                {/* MYY KAIKKI -nappi */}
+                {isSell && (
+                  <span style={{ color: 'var(--c-copper)', fontSize: '0.8rem', cursor: 'pointer' }} onClick={() => setTradeAmount(currentShares.toString())}>
+                    MAX ({currentShares.toFixed(3)})
+                  </span>
+                )}
+              </div>
+              
+              <input 
+                type="number" placeholder="0.00" value={tradeAmount} onChange={(e) => setTradeAmount(e.target.value)}
+                style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid var(--c-copper)', color: 'var(--c-text)', fontSize: '3rem', fontFamily: 'var(--font-body)', fontVariantNumeric: 'tabular-nums', outline: 'none', padding: '0.5rem 0' }}
+              />
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                <Text variant="muted" size="sm">Market: €{currentMarketPrice.toFixed(2)}</Text>
+                <Text variant="primary" size="sm" tabular>
+                  {isSell ? `Value: €${estimatedEur.toFixed(2)}` : `≈ ${estimatedShares.toFixed(3)} Shares`}
                 </Text>
               </div>
-              <Tag label={isStrict ? 'Strict Mode' : 'Simulator Mode'} variant={isStrict ? 'default' : 'copper'} />
             </div>
 
-            {/* Jättimäinen syöttökenttä (Big Number Input) */}
-            <div>
-              <Text variant="muted" size="sm" style={{ textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>
-                Investment Amount (EUR)
-              </Text>
-              <input 
-                type="number" 
-                placeholder="0.00"
-                value={tradeAmount}
-                onChange={(e) => setTradeAmount(e.target.value)}
-                style={{
-                  width: '100%',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: '2px solid var(--c-copper)',
-                  color: 'var(--c-text)',
-                  fontSize: '3rem',
-                  fontFamily: 'var(--font-body)',
-                  fontVariantNumeric: 'tabular-nums',
-                  outline: 'none',
-                  padding: '0.5rem 0'
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                <Text variant="muted" size="sm">Market Price: €{currentMarketPrice.toFixed(2)}</Text>
-                <Text variant="green" size="sm" tabular>≈ {estimatedShares.toFixed(3)} Shares</Text>
+            {/* P&L LASKURI (Näkyy vain myydessä) */}
+            {isSell && numericInput > 0 && (
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 'var(--radius-sharp)', borderLeft: `2px solid ${profitLoss >= 0 ? 'var(--c-green)' : 'var(--c-accent)'}` }}>
+                <Text variant="muted" size="sm" style={{ display: 'block', marginBottom: '0.2rem' }}>Estimated Return (P&L)</Text>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'baseline' }}>
+                  <Text variant={profitLoss >= 0 ? 'green' : 'accent'} size="lg" tabular>
+                    {profitLoss >= 0 ? '+' : ''}€{profitLoss.toFixed(2)}
+                  </Text>
+                  <Text variant={profitLoss >= 0 ? 'green' : 'accent'} size="sm" tabular>
+                    ({profitLossPercent >= 0 ? '+' : ''}{profitLossPercent.toFixed(2)}%)
+                  </Text>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Virheilmoitus jos Strict Mode estää */}
-            {!canAfford && (
+            {/* VIRHEILMOITUKSET */}
+            {!isTradeValid && numericInput > 0 && (
               <Text variant="accent" size="sm" style={{ textAlign: 'center' }}>
-                Insufficient funds. Please inject capital into your ledger.
+                {isSell ? 'Cannot sell more shares than owned.' : 'Insufficient funds in ledger.'}
               </Text>
             )}
 
-            {/* Napit */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-              <Button variant="ghost" onClick={() => { setTradeTarget(null); setTradeAmount(''); }}>
-                Cancel
-              </Button>
-              <Button 
-                variant="primary" 
-                onClick={handleExecuteTrade} 
-                disabled={!isTradeValid || isProcessing}
-              >
+            {/* NAPIT */}
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <Button variant="primary" fullWidth onClick={handleExecuteTrade} disabled={!isTradeValid || isProcessing}>
                 {isProcessing ? 'Processing...' : 'Confirm Execution'}
               </Button>
             </div>

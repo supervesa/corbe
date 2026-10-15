@@ -19,42 +19,76 @@ export async function executeTrade(
   userId: string,
   tickerId: string, 
   symbol: string,
-  amountEur: number,
-  sharesBought: number,
+  tradeType: 'buy' | 'sell', 
+  tradeValueEur: number,     // Summa euroina (maksettu tai saatu)
+  tradeShares: number,       // Osakkeiden määrä
   currentShares: number,
   currentAvgPrice: number
 ) {
-  const amountSnt = Math.round(amountEur * 100);
+  // Lompakon suunta: Osto on miinusta, Myynti on plussaa
+  const amountSnt = Math.round(tradeValueEur * 100) * (tradeType === 'buy' ? -1 : 1);
 
-  // A) Vähennä rahat lompakosta (Ledger)
+  // A) Päivitä lompakko (Ledger)
   const { error: walletError } = await corbeClient
     .from('wallet_ledger')
     .insert({
       user_id: userId,
-      amount_snt: -amountSnt,
-      transaction_type: 'trade_buy',
-      description: `Market Buy: ${symbol} (${sharesBought.toFixed(3)} shares)`
+      amount_snt: amountSnt,
+      transaction_type: tradeType === 'buy' ? 'trade_buy' : 'trade_sell',
+      description: `Market ${tradeType.toUpperCase()}: ${symbol} (${tradeShares.toFixed(3)} shares)`
     });
 
   if (walletError) return { error: walletError };
 
-  // B) Laske uusi keskihinta ja osakemäärä salkkuun
-  const newTotalShares = currentShares + sharesBought;
-  const oldTotalValue = currentShares * currentAvgPrice;
-  const newTotalValue = oldTotalValue + amountEur;
-  const newAvgPrice = newTotalShares > 0 ? newTotalValue / newTotalShares : 0;
+  // B) Laske uudet salkun arvot
+  const newTotalShares = tradeType === 'buy' 
+    ? currentShares + tradeShares 
+    : currentShares - tradeShares;
 
-  // C) Päivitä salkku
-  const { error: portfolioError } = await corbeClient
-    .from('portfolio_tickers')
-    .update({
-      shares: newTotalShares,
-      average_buy_price: newAvgPrice
-    })
-    .eq('id', tickerId)
-    .eq('user_id', userId);
+  // Myynnissä keskihinta ei ikinä muutu, vain ostaessa!
+  let newAvgPrice = currentAvgPrice;
+  if (tradeType === 'buy') {
+    const oldTotalValue = currentShares * currentAvgPrice;
+    const newTotalValue = oldTotalValue + tradeValueEur;
+    newAvgPrice = newTotalShares > 0 ? newTotalValue / newTotalShares : 0;
+  }
 
-  return { error: portfolioError };
+  // C) Päivitä salkku tai SIIRRÄ ARKISTOON (jos myydään tyhjäksi)
+  // Käytetään pientä marginaalia (0.0001) JavaScriptin desimaalivirheiden varalta
+  if (newTotalShares <= 0.0001) {
+    
+    // 1. Laske myynnin lopullinen voitto/tappio euroina
+    const profitLossEur = (currentAvgPrice > 0) 
+      ? tradeValueEur - (currentShares * currentAvgPrice)
+      : 0;
+
+    // 2. Kirjaa osake myytyjen arkistoon (Archived Portfolio)
+    await corbeClient.from('archived_portfolio').insert({
+      user_id: userId,
+      symbol: symbol,
+      total_profit_loss_eur: profitLossEur
+    });
+
+    // 3. Poista aktiivisesta salkusta
+    const { error: deleteError } = await corbeClient
+      .from('portfolio_tickers')
+      .delete()
+      .eq('id', tickerId);
+      
+    return { error: deleteError };
+    
+  } else {
+    // Vain osittainen myynti tai osto -> Päivitetään aktiivista salkkua
+    const { error: updateError } = await corbeClient
+      .from('portfolio_tickers')
+      .update({
+        shares: newTotalShares,
+        average_buy_price: newAvgPrice
+      })
+      .eq('id', tickerId);
+      
+    return { error: updateError };
+  }
 }
 
 // 3. PÄIVITÄ KÄYTTÄJÄN ASETUKSET (Upsert: luo tai päivitä)
