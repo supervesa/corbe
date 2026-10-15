@@ -4,14 +4,20 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './commons/css/global.css';
 
 import { SentinelProvider, useSentinel } from './contexts/SentinelContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { AppLayout } from './layouts/AppLayout';
+import { WalletPage } from './pages/wallet/WalletPage';
 import { StagingPage } from './pages/staging/StagingPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { Loader } from './ui/Loader';
 
+// Uudet sivut tuotu sisään!
+import { ActivePortfolioPage } from './pages/portfolios/ActivePortfolioPage';
+import { RejectedPage } from './pages/staging/RejectedPage';
+
 // --- VÄLIAIKAISET PLACEHOLDER-SIVUT ---
+// PortfoliosDummy poistettu, koska meillä on nyt oikea salkkusivu!
 const AnalyticsDummy = () => <div style={{ padding: '0 3rem' }}><h2 className="font-display">Analytics Module</h2><p className="font-ui" style={{color: 'var(--c-text-muted)'}}>Coming soon...</p></div>;
-const PortfoliosDummy = () => <div style={{ padding: '0 3rem' }}><h2 className="font-display">Portfolios</h2><p className="font-ui" style={{color: 'var(--c-text-muted)'}}>Coming soon...</p></div>;
 
 // --- PORTINVARTIJA (Protected Route) ---
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -47,28 +53,39 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <AppLayout>{children}</AppLayout>;
 };
 
-
 // --- PÄÄSOVELLUS & REITITYS ---
 export default function App() {
   return (
     <BrowserRouter>
       <SentinelProvider>
-        <Routes>
-          
-          {/* Julkinen reitti */}
-          <Route path="/login" element={<LoginPage />} />
+        <ToastProvider> 
+          <Routes>
+            
+            {/* Julkinen reitti */}
+            <Route path="/login" element={<LoginPage />} />
 
-          {/* Suojatut reitit */}
-          <Route path="/" element={<ProtectedRoute><Navigate to="/staging" replace /></ProtectedRoute>} />
-          
-          <Route path="/staging" element={<ProtectedRoute><StagingPage /></ProtectedRoute>} />
-          <Route path="/staging/*" element={<ProtectedRoute><StagingPage /></ProtectedRoute>} />
-          
-          <Route path="/analytics" element={<ProtectedRoute><AnalyticsDummy /></ProtectedRoute>} />
-          
-          <Route path="/portfolios/*" element={<ProtectedRoute><PortfoliosDummy /></ProtectedRoute>} />
+            {/* Suojatut reitit */}
+            <Route path="/" element={<ProtectedRoute><Navigate to="/staging" replace /></ProtectedRoute>} />
+            
+            {/* ETEINEN */}
+            <Route path="/staging" element={<ProtectedRoute><StagingPage /></ProtectedRoute>} />
 
-        </Routes>
+            {/* LOMPAKKO */}
+            <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
+
+            <Route path="/staging/approved" element={<ProtectedRoute><Navigate to="/portfolios/active" replace /></ProtectedRoute>} />
+            
+            {/* HYLÄTYT (Archived) */}
+            <Route path="/staging/rejected" element={<ProtectedRoute><RejectedPage /></ProtectedRoute>} />
+            
+            {/* AKTIIVINEN SALKKU */}
+            <Route path="/portfolios/active" element={<ProtectedRoute><ActivePortfolioPage /></ProtectedRoute>} />
+            
+            {/* ANALYTIIKKA (Vielä tyhjä) */}
+            <Route path="/analytics" element={<ProtectedRoute><AnalyticsDummy /></ProtectedRoute>} />
+
+          </Routes>
+        </ToastProvider> 
       </SentinelProvider>
     </BrowserRouter>
   );

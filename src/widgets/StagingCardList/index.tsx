@@ -1,13 +1,13 @@
 import React from 'react';
 import { StagingCard } from '../StagingCard';
-import type { FlatTickerData } from '../StagingDataTable'; // Tuodaan tyyppi
+import type { FlatTickerData } from '../StagingDataTable'; 
 
 interface Props {
   data: FlatTickerData[];
+  onAction: (symbol: string, name: string, action: 'approve' | 'reject') => void; // <-- LISÄTTY!
 }
 
-export const StagingCardList = ({ data }: Props) => {
-  // Otetaan listasta vain 3 ensimmäistä osaketta "Highlight" -korteiksi
+export const StagingCardList = ({ data, onAction }: Props) => {
   const topPicks = data.slice(0, 3);
 
   return (
@@ -17,13 +17,9 @@ export const StagingCardList = ({ data }: Props) => {
       gap: '2rem' 
     }}>
       {topPicks.map((item) => {
-        // 1. Muotoillaan 1 viikon trendi tekstiksi (esim. "+4.50%")
         const trendVal = item.meta.baskets['1w'];
         const trendString = `${trendVal > 0 ? '+' : ''}${trendVal.toFixed(2)}%`;
 
-        // 2. Koska Python-botti ei vielä tallenna oikeaa kurssihistoriaa kantaan,
-        // generoidaan nykyhinnan ympärille nätin näköinen satunnainen "fake" -käyrä.
-        // Tämän voi korvata myöhemmin esim: item.meta.history
         const mockHistory = Array.from({ length: 15 }, (_, i) => {
           const volatility = item.price * 0.05;
           return item.price + (Math.sin(i) * volatility) + (trendVal > 0 ? i : -i);
@@ -33,9 +29,11 @@ export const StagingCardList = ({ data }: Props) => {
           <StagingCard 
             key={item.id}
             name={item.name} 
+            symbol={item.symbol} // <-- LISÄTTY! Välitetään kortille
             sector={item.meta.sector} 
             trend={trendString} 
             history={mockHistory}
+            onAction={onAction}  // <-- LISÄTTY! Välitetään kortille
           />
         );
       })}

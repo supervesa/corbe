@@ -11,6 +11,11 @@ type MenuItem = {
 
 const menuData: MenuItem[] = [
   {
+    label: 'Wallet', // <-- UUSI!
+    path: '/wallet'
+  },
+  
+  {
     label: 'Portfolios',
     children: [
       { label: 'Active', path: '/portfolios/active' },

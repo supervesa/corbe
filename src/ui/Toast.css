@@ -1,0 +1,48 @@
+/* src/ui/Toast.css */
+.corbe-toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 9999;
+  }
+  
+  .corbe-toast {
+    background-color: var(--c-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    border-radius: var(--radius-sharp);
+    padding: 1rem 1.5rem;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    animation: slideIn 0.3s ease-out forwards;
+  }
+  
+  /* Aistikas vasen reunaviiva kertoo statuksen ilman ikoneja */
+  .corbe-toast--success { border-left: 2px solid var(--c-green); }
+  .corbe-toast--error { border-left: 2px solid var(--c-accent); }
+  .corbe-toast--info { border-left: 2px solid var(--c-copper); }
+  
+  .corbe-toast-title {
+    font-family: var(--font-heading);
+    font-size: 0.7rem;
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+  }
+  
+  .corbe-toast-message {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--c-text);
+    font-weight: var(--fw-light);
+  }
+  
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }

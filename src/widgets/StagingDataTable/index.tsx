@@ -1,14 +1,13 @@
-// src/widgets/StagingDataTable/index.tsx
 import React from 'react';
 import { Tag, Text } from '../../ui/Typography';
 import { Button } from '../../ui/Button';
-import { FlexTable, type ColumnDef } from '../../ui/FlexTable'; // <-- TÄMÄ 'type' SANA KORJASI ONGELMAN!
+import { FlexTable, type ColumnDef } from '../../ui/FlexTable';
 
 export interface FlatTickerData {
   id: string;
   symbol: string;
   name: string;
-  // status: 'pending' | 'approved' | 'rejected'; <-- POISTA TÄMÄ RIVI
+  // status on poistettu, koska Eteisen allas ei tarvitse sitä
   price: number;
   meta: {
     sector: string;
@@ -18,9 +17,10 @@ export interface FlatTickerData {
 
 interface TableProps {
   data: FlatTickerData[];
+  onAction: (symbol: string, name: string, action: 'approve' | 'reject') => void; // <-- LISÄTTY!
 }
 
-export const StagingDataTable = ({ data }: TableProps) => {
+export const StagingDataTable = ({ data, onAction }: TableProps) => {
 
   const formatTrend = (val: number) => {
     const isPos = val >= 0;
@@ -66,10 +66,11 @@ export const StagingDataTable = ({ data }: TableProps) => {
       header: '', 
       flex: 2,
       align: 'right', 
-      render: () => (
+      render: (row) => (
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <Button variant="danger" size="sm">Reject</Button>
-          <Button variant="primary" size="sm">Approve</Button>
+          {/* Kytketään napit kutsumaan onActionia tämän rivin datalla! */}
+          <Button variant="danger" size="sm" onClick={() => onAction(row.symbol, row.name, 'reject')}>Reject</Button>
+          <Button variant="primary" size="sm" onClick={() => onAction(row.symbol, row.name, 'approve')}>Approve</Button>
         </div>
       )
     }

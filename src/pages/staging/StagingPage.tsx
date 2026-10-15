@@ -1,62 +1,60 @@
+// src/pages/staging/StagingPage.tsx
 import React, { useEffect, useState } from 'react';
 import { StagingDataTable, type FlatTickerData } from '../../widgets/StagingDataTable';
 import { StagingCardList } from '../../widgets/StagingCardList';
-import { fetchPendingTickers } from '../../db/queries/staging';
+import { fetchPendingTickers, approveTicker, rejectTicker } from '../../db/queries/staging';
 import { Loader } from '../../ui/Loader';
 import { Heading, Text, Prose } from '../../ui/Typography';
-
-// Varadata (Placeholder), jos tietokannasta ei löydy rivejä
-const PLACEHOLDER_TICKERS: FlatTickerData[] = [
-  {
-    id: '47b46e7f-d795-4b97-b2c0-6f2099cf46fa',
-    symbol: 'VALMT.HE',
-    name: 'Valmet Oyj',
-    price: 26.45,
-    meta: {
-      sector: 'Industrials',
-      baskets: { '1w': -2.1, '1m': 4.5, '6m': 12.0, '2y': 34.2 },
-    },
-    created_at: '2026-10-14T17:08:29.230539+00:00',
-  } as unknown as FlatTickerData,
-  {
-    id: '7289b686-0026-4a0c-9259-c4aa94cbc8a2',
-    symbol: 'GOFORE.HE',
-    name: 'Gofore Oyj',
-    price: 18.2,
-    meta: {
-      sector: 'Technology',
-      baskets: { '1w': 1.2, '1m': 8.4, '6m': 5.2, '2y': 45.1 },
-    },
-    created_at: '2026-10-14T17:08:29.230539+00:00',
-  } as unknown as FlatTickerData,
-  {
-    id: '9192d864-468b-46c8-b092-c29e73ce19ec',
-    symbol: 'NESTE.HE',
-    name: 'Neste Oyj',
-    price: 24.1,
-    meta: {
-      sector: 'Energy',
-      baskets: { '1w': -4.2, '1m': -8.1, '6m': -15.4, '2y': -22.0 },
-    },
-    created_at: '2026-10-14T17:08:29.230539+00:00',
-  } as unknown as FlatTickerData,
-];
+import { useSentinel } from '../../contexts/SentinelContext';
+import { useToast } from '../../contexts/ToastContext';
 
 export const StagingPage = () => {
+  const { userProfile } = useSentinel();
+  const { showToast } = useToast();
   const [data, setData] = useState<FlatTickerData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 1. Datan lataus (käyttää nyt userId:tä suodatukseen)
   useEffect(() => {
     const loadData = async () => {
+      if (!userProfile?.id) return;
       setIsLoading(true);
-      const tickers = await fetchPendingTickers();
-      // Jos kanta palauttaa tyhjää, näytetään placeholder-osakkeet
-      setData(tickers.length > 0 ? tickers : PLACEHOLDER_TICKERS);
+      const tickers = await fetchPendingTickers(userProfile.id);
+      setData(tickers);
       setIsLoading(false);
     };
 
     loadData();
-  }, []);
+  }, [userProfile?.id]);
+
+  // 2. Yleinen käsittelijä Approve/Reject -toiminnoille (Optimistic UI)
+  const handleAction = async (symbol: string, name: string, action: 'approve' | 'reject') => {
+    if (!userProfile?.id) return;
+
+    // Poistetaan osake VÄLITTÖMÄSTI ruudulta (Optimistic Update)
+    setData(prevData => prevData.filter(item => item.symbol !== symbol));
+
+    let error = null;
+
+    if (action === 'approve') {
+      const res = await approveTicker(userProfile.id, symbol);
+      error = res.error;
+      if (!error) showToast(`PROMOTED`, `${name} added to active portfolio.`, 'success');
+    } else {
+      const res = await rejectTicker(userProfile.id, symbol);
+      error = res.error;
+      if (!error) showToast(`ARCHIVED`, `${name} excluded from future screens.`, 'error'); // error-tyyli antaa oxblood-värin
+    }
+
+    // Jos kanta kaatuu (esim. verkkovirhe), tuodaan osake nätisti takaisin ja näytetään virhe
+    if (error) {
+      console.error("Action failed:", error);
+      showToast('SYSTEM ERROR', `Failed to process ${symbol}. Please try again.`, 'error');
+      // Ladataan data kokonaan uusiksi, jotta UI on synkassa kannan kanssa
+      const refreshed = await fetchPendingTickers(userProfile.id);
+      setData(refreshed);
+    }
+  };
 
   return (
     <div>
@@ -91,7 +89,8 @@ export const StagingPage = () => {
             <Heading level={3} variant="muted" spacing="md">
               Highlighted Trends
             </Heading>
-            <StagingCardList data={data} />
+            {/* Viedään onAction-funktio alas komponenteille */}
+            <StagingCardList data={data} onAction={handleAction} />
           </section>
 
           {/* Välianalyysi / leipäteksti ennen taulukkoa */}
@@ -102,7 +101,7 @@ export const StagingPage = () => {
             <Prose>
               <Text as="p" variant="muted" weight="light" size="sm">
                 Industrial and technology constituents continue to demonstrate 
-                relative resilience across the 6-month ja 2-year observation windows, 
+                relative resilience across the 6-month and 2-year observation windows, 
                 compensating for near-term volatility in the weekly basket.
               </Text>
               <Text as="p" variant="muted" weight="light" size="sm">
@@ -118,13 +117,16 @@ export const StagingPage = () => {
             <Heading level={3} variant="muted" spacing="md">
               Detailed Analysis (All Discoveries)
             </Heading>
-            <StagingDataTable data={data} />
+            {/* Viedään onAction-funktio alas komponenteille */}
+            <StagingDataTable data={data} onAction={handleAction} />
           </section>
         </>
       ) : (
-        <Text as="p" variant="muted" weight="light">
-          No pending discoveries at the moment.
-        </Text>
+        <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+          <Text as="p" variant="muted" weight="light">
+            No pending discoveries at the moment. The quantitative engine is monitoring for new anomalies.
+          </Text>
+        </div>
       )}
     </div>
   );

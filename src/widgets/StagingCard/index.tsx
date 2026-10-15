@@ -6,12 +6,14 @@ import { ambientBorder } from '../../commons/ambientBorder';
 
 interface Props { 
   name: string; 
+  symbol: string; // <-- LISÄTTY! Tarvitaan tietokantaa varten
   sector: string; 
   trend: string;
   history: number[];
+  onAction: (symbol: string, name: string, action: 'approve' | 'reject') => void; // <-- LISÄTTY!
 }
 
-export const StagingCard = ({ name, sector, trend, history }: Props) => {
+export const StagingCard = ({ name, symbol, sector, trend, history, onAction }: Props) => {
   const isPositive = trend.startsWith('+');
   const lineColor = isPositive ? 'var(--c-green)' : 'var(--c-accent)';
 
@@ -41,15 +43,13 @@ export const StagingCard = ({ name, sector, trend, history }: Props) => {
           Sector: {sector}<br/>Awaiting executive approval.
         </p>
         
-        {/* Nappien asettelu rinnakkain (Grid) */}
+        {/* Napit kutsuvat nyt onAction-funktiota oikeilla parametreilla! */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
-          {/* Harmaa, joka hoverilla muuttuu Oxblood punaiseksi */}
-          <Button variant="danger" fullWidth onClick={() => console.log('Rejected')}>
+          <Button variant="danger" fullWidth onClick={() => onAction(symbol, name, 'reject')}>
             Reject
           </Button>
 
-          {/* Oletus Primary: Kuparinen, jossa light-catch reuna */}
-          <Button variant="primary" fullWidth onClick={() => console.log('Approved')}>
+          <Button variant="primary" fullWidth onClick={() => onAction(symbol, name, 'approve')}>
             Approve
           </Button>
         </div>
