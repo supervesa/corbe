@@ -1,12 +1,18 @@
+// src/ui/Typography.tsx
 import React from 'react';
 import './DataUI.css';
 
+// ==========================================
+// HEADING
+// ==========================================
 interface HeadingProps {
   children: React.ReactNode;
   level?: 1 | 2 | 3 | 4;
   variant?: 'primary' | 'muted' | 'accent';
   weight?: 'light' | 'regular';
   spacing?: 'none' | 'sm' | 'md' | 'lg';
+  style?: React.CSSProperties; // <-- Lisätty
+  className?: string;          // <-- Lisätty
 }
 
 export const Heading = ({
@@ -15,6 +21,8 @@ export const Heading = ({
   variant = 'primary',
   weight = 'light',
   spacing = 'md',
+  style,
+  className = '',
 }: HeadingProps) => {
   const TagName = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4';
 
@@ -40,7 +48,7 @@ export const Heading = ({
 
   return (
     <TagName
-      className="font-display"
+      className={`font-display ${className}`.trim()}
       style={{
         fontSize: sizes[level],
         fontWeight: weight === 'light' ? 'var(--fw-light)' : 'var(--fw-regular)',
@@ -48,6 +56,7 @@ export const Heading = ({
         margin: margins[spacing],
         lineHeight: 1.3,
         letterSpacing: 'var(--ls-wide)',
+        ...style // <-- Yhdistetään ulkoiset tyylit
       }}
     >
       {children}
@@ -55,6 +64,9 @@ export const Heading = ({
   );
 };
 
+// ==========================================
+// TEXT
+// ==========================================
 interface TextProps {
   children: React.ReactNode;
   variant?: 'primary' | 'muted' | 'accent' | 'green';
@@ -62,7 +74,9 @@ interface TextProps {
   weight?: 'light' | 'regular';
   as?: 'p' | 'span' | 'div';
   tabular?: boolean;
-  columns?: boolean; // Pikavalinta: jakaa pitkän kappaleen suoraan 2 palstaan desktopissa
+  columns?: boolean; 
+  style?: React.CSSProperties; // <-- Lisätty
+  className?: string;          // <-- Lisätty
 }
 
 export const Text = ({
@@ -73,6 +87,8 @@ export const Text = ({
   as: Component = 'span',
   tabular = false,
   columns = false,
+  style,
+  className = '',
 }: TextProps) => {
   const getColor = () => {
     switch (variant) {
@@ -95,7 +111,7 @@ export const Text = ({
 
   return (
     <Component
-      className={tabular ? 'font-numbers' : 'font-ui'}
+      className={`${tabular ? 'font-numbers' : 'font-ui'} ${className}`.trim()}
       style={{
         color: getColor(),
         fontSize: getFontSize(),
@@ -108,6 +124,7 @@ export const Text = ({
               columnGap: '3.5rem',
             }
           : {}),
+        ...style // <-- Yhdistetään ulkoiset tyylit (KORJAA NETLIFY-VIRHEEN)
       }}
     >
       {children}
@@ -115,26 +132,28 @@ export const Text = ({
   );
 };
 
+// ==========================================
+// PROSE
+// ==========================================
 interface ProseProps {
   children: React.ReactNode;
   columns?: 1 | 2;
-  rule?: boolean; // Haluttaessa hienovarainen pystyviiva palstojen väliin
+  rule?: boolean; 
+  style?: React.CSSProperties; // <-- Lisätty
+  className?: string;          // <-- Lisätty
 }
 
-/**
- * Lehtimäinen leipätekstisäiliö.
- * Desktopissa 2 palstaa selkeällä 3.5rem välillä, mobiilissa taittuu automaattisesti 1 palstaan.
- */
-export const Prose = ({ children, columns = 2, rule = false }: ProseProps) => {
+export const Prose = ({ children, columns = 2, rule = false, style, className = '' }: ProseProps) => {
   return (
     <div
-      className="font-ui"
+      className={`font-ui ${className}`.trim()}
       style={{
         columns: columns === 2 ? '2 340px' : '1',
         columnGap: '3.5rem',
         columnRule: rule ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
         lineHeight: 1.75,
         marginBottom: '2.5rem',
+        ...style
       }}
     >
       {children}
@@ -142,14 +161,22 @@ export const Prose = ({ children, columns = 2, rule = false }: ProseProps) => {
   );
 };
 
+// ==========================================
+// TAG
+// ==========================================
 interface TagProps {
   label: string;
   variant?: 'default' | 'copper' | 'green' | 'danger';
+  style?: React.CSSProperties; // <-- Lisätty
+  className?: string;          // <-- Lisätty
 }
 
-export const Tag = ({ label, variant = 'default' }: TagProps) => {
+export const Tag = ({ label, variant = 'default', style, className = '' }: TagProps) => {
   return (
-    <span className={`corbe-tag corbe-tag--${variant}`}>
+    <span 
+      className={`corbe-tag corbe-tag--${variant} ${className}`.trim()}
+      style={style}
+    >
       {label}
     </span>
   );
