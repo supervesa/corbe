@@ -1,4 +1,3 @@
-// src/widgets/StagingDataTable/StagingDataTable.tsx
 import React from 'react';
 import { Tag, Text } from '../../ui/Typography';
 import { Button } from '../../ui/Button';
@@ -24,7 +23,6 @@ export interface FlatTickerData {
     sector: string;
     baskets: { '1w': number; '1m': number; '6m': number; '2y': number };
   };
-  // Rikastetut kentät uusista tauluista (valinnaisia, jotta taaksepäinyhteensopivuus säilyy)
   market?: MarketSnapshot;
   history?: number[];
   indicators?: TickerIndicators;
@@ -35,9 +33,10 @@ export interface FlatTickerData {
 interface TableProps {
   data: FlatTickerData[];
   onAction: (symbol: string, name: string, action: 'approve' | 'reject') => void;
+  onAnalyze: (row: FlatTickerData) => void; // <-- LISÄTTY: Avaa Asset Terminalin
 }
 
-export const StagingDataTable = ({ data, onAction }: TableProps) => {
+export const StagingDataTable = ({ data, onAction, onAnalyze }: TableProps) => {
   const formatTrend = (val: number) => {
     const isPos = val >= 0;
     return (
@@ -53,8 +52,11 @@ export const StagingDataTable = ({ data, onAction }: TableProps) => {
       header: 'Asset',
       flex: 1.8,
       render: (row) => (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <Text variant="primary">{row.name}</Text>
+        // LISÄTTY: Klikattavuus ja hover-tyyli nimeen
+        <div style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }} onClick={() => onAnalyze(row)}>
+          <Text variant="primary" style={{ textDecoration: 'underline', textUnderlineOffset: '4px', textDecorationColor: 'rgba(255,255,255,0.2)' }}>
+            {row.name}
+          </Text>
           <Text variant="muted" size="sm" tabular>
             {row.symbol}
           </Text>
@@ -95,11 +97,7 @@ export const StagingDataTable = ({ data, onAction }: TableProps) => {
       flex: 1.4,
       render: (row) => {
         if (!row.indicators) {
-          return (
-            <Text variant="muted" size="sm">
-              —
-            </Text>
-          );
+          return <Text variant="muted" size="sm">—</Text>;
         }
         const rsi = getRsiStatus(row.indicators.RSI_14);
         const macd = row.indicators.MACD;
@@ -109,8 +107,7 @@ export const StagingDataTable = ({ data, onAction }: TableProps) => {
             <Tag label={rsi.label} variant={rsi.variant} />
             {macd !== undefined && (
               <Text variant="muted" size="sm" tabular>
-                MACD {macd > 0 ? '+' : ''}
-                {macd.toFixed(2)}
+                MACD {macd > 0 ? '+' : ''}{macd.toFixed(2)}
               </Text>
             )}
           </div>
@@ -123,17 +120,13 @@ export const StagingDataTable = ({ data, onAction }: TableProps) => {
       render: (row) => {
         const ai = row.ai_prediction;
         if (!ai) {
-          return (
-            <Text variant="muted" size="sm" tabular>
-              —
-            </Text>
-          );
+          return <Text variant="muted" size="sm" tabular>—</Text>;
         }
         const isPos = ai.predicted_trend >= 0;
         return (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <Text variant={isPos ? 'green' : 'accent'} size="sm" tabular>
-              {formatSignedPercent(ai.predicted_trend, 1)} ({formatHorizon(ai.target_horizon)})
+              TGT: {formatSignedPercent(ai.predicted_trend, 1)} ({formatHorizon(ai.target_horizon)})
             </Text>
             <Text variant="muted" size="sm" tabular>
               {ai.confidence_score.toFixed(0)}% conf.
@@ -144,10 +137,12 @@ export const StagingDataTable = ({ data, onAction }: TableProps) => {
     },
     {
       header: '',
-      flex: 1.8,
+      flex: 2.2, // Levennetty aavistus jotta 3 nappia mahtuu nätisti
       align: 'right',
       render: (row) => (
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+          {/* LISÄTTY: Analyze-nappi avaa modaalin */}
+          <Button variant="ghost" size="sm" onClick={() => onAnalyze(row)}>Analyze</Button>
           <Button
             variant="danger"
             size="sm"

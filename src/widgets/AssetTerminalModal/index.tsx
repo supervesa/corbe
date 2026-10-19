@@ -20,23 +20,23 @@ interface AssetTerminalProps {
   walletBalance: number;
   isStrict: boolean;
   onTradeSuccess: () => void;
+  companySummary?: string; // <-- LISÄTTY
+  themeMatch?: string;     // <-- LISÄTTY
 }
 
 export const AssetTerminalModal = ({
   isOpen, onClose, userId, tickerId, symbol, currentMarketPrice, 
-  currentShares, currentAvgPrice, walletBalance, isStrict, onTradeSuccess
+  currentShares, currentAvgPrice, walletBalance, isStrict, onTradeSuccess,
+  companySummary, themeMatch
 }: AssetTerminalProps) => {
 
   const { showToast } = useToast();
   
-  // Tab State (Mobile)
   const [activeTab, setActiveTab] = useState<'intelligence' | 'trade'>('intelligence');
   
-  // Data State
   const [intelligence, setIntelligence] = useState<AssetIntelligence | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Trade State
   const [tradeMode, setTradeMode] = useState<'buy' | 'sell'>('buy');
   const [tradeAmount, setTradeAmount] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -48,7 +48,6 @@ export const AssetTerminalModal = ({
         setIntelligence(data);
         setIsLoading(false);
       });
-      // Nollataan tila kun aukeaa
       setTradeAmount('');
       setTradeMode(currentShares > 0 ? 'sell' : 'buy');
       setActiveTab('intelligence');
@@ -101,7 +100,6 @@ export const AssetTerminalModal = ({
 
   if (!isOpen) return null;
 
-  // Renderöidään graafi historian pohjalta
   const historyPrices = intelligence?.history.map(h => h.close) || [];
   const trendColor = historyPrices.length > 1 && historyPrices[historyPrices.length - 1] >= historyPrices[0] 
     ? 'var(--c-green)' : 'var(--c-accent)';
@@ -110,7 +108,6 @@ export const AssetTerminalModal = ({
     <Modal isOpen={isOpen} title={symbol} onClose={onClose}>
       <div className="terminal-container">
         
-        {/* Yläpalkki (Tilannekatsaus) */}
         <div className="terminal-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <div>
@@ -124,7 +121,6 @@ export const AssetTerminalModal = ({
           </div>
         </div>
 
-        {/* Välilehdet (Näkyy vain mobiilissa) */}
         <div className="terminal-tabs">
           <button 
             className={`terminal-tab-btn ${activeTab === 'intelligence' ? 'active' : 'inactive'}`}
@@ -136,11 +132,28 @@ export const AssetTerminalModal = ({
           >EXECUTE</button>
         </div>
 
-        {/* Sisältöalue (Pöytäkoneella vierekkäin, mobiilissa välilehden mukaan) */}
         <div className="terminal-content-split">
           
           {/* VASEN SARAKE: INTELLIGENCE */}
           <div className={`terminal-col-left terminal-tab-content ${activeTab === 'trade' ? 'hide-on-mobile' : ''}`}>
+            
+            {/* UUSI: AI Yhtiöprofiili (Näkyy vain jos dataa on, eli Eteisessä) */}
+            {(companySummary || themeMatch) && (
+              <div className="terminal-panel" style={{ borderLeft: '2px solid var(--c-copper)', marginBottom: '1.5rem' }}>
+                <Heading level={4} spacing="sm">AI Company Profiler</Heading>
+                {companySummary && (
+                  <Text as="p" variant="muted" size="sm" style={{ marginBottom: themeMatch ? '1rem' : '0' }}>
+                    {companySummary}
+                  </Text>
+                )}
+                {themeMatch && (
+                  <div>
+                    <Tag label={`THEME MATCH: ${themeMatch.toUpperCase()}`} variant="copper" />
+                  </div>
+                )}
+              </div>
+            )}
+
             {isLoading ? (
               <Text variant="muted">Loading telemetry...</Text>
             ) : (
@@ -155,7 +168,7 @@ export const AssetTerminalModal = ({
                 </div>
 
                 {intelligence?.prediction && (
-                  <div className="terminal-panel" style={{ borderLeft: '2px solid var(--c-copper)' }}>
+                  <div className="terminal-panel">
                     <Heading level={4} spacing="sm">AI Oracle</Heading>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Text variant="muted" size="sm">Horizon: {intelligence.prediction.target_horizon}</Text>
