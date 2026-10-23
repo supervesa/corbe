@@ -1,6 +1,7 @@
 // src/widgets/TopNavigation/index.tsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { BrokerLogsPanel } from '../BrokerLogsPanel'; // <-- UUSI IMPORT
 import './TopNavigation.css';
 
 type MenuItem = {
@@ -11,10 +12,9 @@ type MenuItem = {
 
 const menuData: MenuItem[] = [
   {
-    label: 'Wallet', // <-- UUSI!
+    label: 'Wallet',
     path: '/wallet'
   },
-  
   {
     label: 'Portfolios',
     children: [
@@ -50,6 +50,7 @@ const menuData: MenuItem[] = [
 export const TopNavigation = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [expandedMobileNodes, setExpandedMobileNodes] = useState<string[]>([]);
+  const [isLogsOpen, setIsLogsOpen] = useState(false); // <-- UUSI TILA PANEELILLE
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,7 +79,7 @@ export const TopNavigation = () => {
   return (
     <>
       <header className="corbe-header">
-        <div className="corbe-logo-box" onClick={() => handleNavigate('/')}>
+        <div className="corbe-logo-box" onClick={() => handleNavigate('/')} style={{ cursor: 'pointer' }}>
           Corbè
         </div>
 
@@ -123,18 +124,36 @@ export const TopNavigation = () => {
           ))}
         </nav>
 
-        {/* HAMBURGER IKONI */}
-        <button className="corbe-hamburger" onClick={() => setIsMobileOpen(!isMobileOpen)}>
-          {isMobileOpen ? (
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+        {/* OIKEA REUNA: Kello-ikoni ja Mobiilihampurilainen */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          
+          {/* UUSI: Broker Logs -nappi (Kello) */}
+          <button 
+            onClick={() => setIsLogsOpen(true)}
+            style={{ 
+              background: 'none', border: 'none', color: 'var(--c-text)', 
+              cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 
+            }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
-          ) : (
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          )}
-        </button>
+          </button>
+
+          {/* HAMBURGER IKONI (Näkyy vain mobiilissa CSS:n avulla) */}
+          <button className="corbe-hamburger" onClick={() => setIsMobileOpen(!isMobileOpen)}>
+            {isMobileOpen ? (
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            ) : (
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            )}
+          </button>
+        </div>
       </header>
 
       {/* MOBIILIVALIKKO */}
@@ -182,6 +201,9 @@ export const TopNavigation = () => {
           </div>
         ))}
       </div>
+
+      {/* UUSI: MEKLARIN POSTILAATIKKO PANEELI */}
+      <BrokerLogsPanel isOpen={isLogsOpen} onClose={() => setIsLogsOpen(false)} />
     </>
   );
 };
