@@ -21,7 +21,9 @@ export interface FlatTickerData {
   price: number;
   meta: {
     sector: string;
-    baskets: { '1w': number; '1m': number; '6m': number; '2y': number };
+    baskets: { '1w': number; '1m': number; '6m': number; '2y': number; };
+    ai_company_summary?: string; // <-- LISÄTTY
+    ai_theme_match?: string;     // <-- LISÄTTY
   };
   market?: MarketSnapshot;
   history?: number[];

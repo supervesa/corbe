@@ -1,8 +1,8 @@
 // src/pages/staging/StagingPage.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSentinel } from '../../contexts/SentinelContext';
 import { useToast } from '../../contexts/ToastContext';
-import { fetchPendingTickers, approveTicker, rejectTicker } from '../../db/queries/staging';
+import { fetchEnrichedPendingTickers, approveTicker, rejectTicker } from '../../db/queries/staging';
 import { fetchUserSettings } from '../../db/queries/trading';
 import { fetchWalletLedger } from '../../db/queries/wallet';
 import { StagingDataTable, type FlatTickerData } from '../../widgets/StagingDataTable';
@@ -23,19 +23,20 @@ export const StagingPage = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [isStrict, setIsStrict] = useState(false);
 
-  // 1. Datan lataus (Hakee Eteisen, Lompakon saldon ja Asetukset rinnakkain)
+  // 1. Datan lataus (Hakee Eteisen RIKASTETUN datan, Lompakon saldon ja Asetukset rinnakkain)
   const loadData = async () => {
     if (!userProfile?.id) return;
     setIsLoading(true);
     
     const [tickers, ledger, settings] = await Promise.all([
-      fetchPendingTickers(userProfile.id),
+      fetchEnrichedPendingTickers(userProfile.id),
       fetchWalletLedger(userProfile.id),
       fetchUserSettings(userProfile.id)
     ]);
     
     setData(tickers);
-    setWalletBalance(ledger.reduce((sum, t) => sum + t.amount_snt, 0) / 100);
+    // TypeScript-korjattu reduce-funktio Netlifyä varten:
+    setWalletBalance(ledger.reduce((sum: number, t: any) => sum + t.amount_snt, 0) / 100);
     setIsStrict(settings.strict_wallet_mode);
     setIsLoading(false);
   };
@@ -48,10 +49,10 @@ export const StagingPage = () => {
   const handleAction = async (symbol: string, name: string, action: 'approve' | 'reject') => {
     if (!userProfile?.id) return;
 
-    // Poistetaan osake valittomasti ruudulta (Optimistic Update)
+    // Poistetaan osake välittömästi ruudulta (Optimistic Update)
     setData((prevData) => prevData.filter((item) => item.symbol !== symbol));
     
-    // Sulje modaali, jos se oli auki talle osakkeelle
+    // Sulje modaali, jos se oli auki tälle osakkeelle
     if (analyzeTarget?.symbol === symbol) setAnalyzeTarget(null);
 
     let error = null;
@@ -66,12 +67,12 @@ export const StagingPage = () => {
       if (!error) showToast('ARCHIVED', `${name} excluded from future screens.`, 'error');
     }
 
-    // Jos kanta kaatuu (esim. verkkovirhe), tuodaan osake natisti takaisin ja naytetaan virhe
+    // Jos kanta kaatuu (esim. verkkovirhe), tuodaan osake nätisti takaisin ja näytetään virhe
     if (error) {
       console.error('Action failed:', error);
       showToast('SYSTEM ERROR', `Failed to process ${symbol}. Please try again.`, 'error');
       // Ladataan data kokonaan uusiksi, jotta UI on synkassa kannan kanssa
-      const refreshed = await fetchPendingTickers(userProfile.id);
+      const refreshed = await fetchEnrichedPendingTickers(userProfile.id);
       setData(refreshed);
     }
   };
@@ -79,7 +80,7 @@ export const StagingPage = () => {
   return (
     <div style={{ padding: '0 1.5rem', maxWidth: '1200px', margin: '0 auto', paddingBottom: '4rem' }}>
       
-      {/* Otsikko ja lehtimainen 2-palstainen johdantoteksti */}
+      {/* Otsikko ja lehtimäinen 2-palstainen johdantoteksti */}
       <section style={{ marginBottom: '3.5rem', paddingTop: '2rem' }}>
         <Heading level={2} spacing="sm">
           Pending Discoveries
@@ -105,7 +106,7 @@ export const StagingPage = () => {
         <Loader />
       ) : data.length > 0 ? (
         <>
-          {/* Ylaosan nostot (Kortit) */}
+          {/* Yläosan nostot (Kortit) */}
           <section style={{ marginBottom: '4rem' }}>
             <Heading level={3} variant="muted" spacing="md">
               Highlighted Trends
@@ -113,7 +114,7 @@ export const StagingPage = () => {
             <StagingCardList data={data} onAction={handleAction} />
           </section>
 
-          {/* Valianalyysi / leipateksti ennen taulukkoa */}
+          {/* Välianalyysi / leipäteksti ennen taulukkoa */}
           <section style={{ marginBottom: '3rem' }}>
             <Heading level={3} variant="muted" spacing="sm">
               Screening Commentary
@@ -161,7 +162,7 @@ export const StagingPage = () => {
           tickerId={analyzeTarget.id}
           symbol={analyzeTarget.symbol}
           currentMarketPrice={Number(analyzeTarget.price) || 0}
-          currentShares={0} // Eteisessa omistus on aina 0
+          currentShares={0} // Eteisessä omistus on aina 0
           currentAvgPrice={0}
           walletBalance={walletBalance}
           isStrict={isStrict}

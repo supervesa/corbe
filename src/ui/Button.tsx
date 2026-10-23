@@ -2,7 +2,7 @@ import React, { ButtonHTMLAttributes } from 'react';
 import './Button.css';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'copper'; // <-- Lisätty copper
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
 }
