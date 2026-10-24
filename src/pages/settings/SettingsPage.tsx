@@ -17,6 +17,7 @@ export const SettingsPage = () => {
   
   // Wallet Settings
   const [isStrict, setIsStrict] = useState(false);
+  const [blitzAllocation, setBlitzAllocation] = useState<number>(40);
   const [isSaving, setIsSaving] = useState(false);
 
   // Ticker Settings
@@ -39,6 +40,7 @@ export const SettingsPage = () => {
     ]);
     
     setIsStrict(settings.strict_wallet_mode);
+    setBlitzAllocation(settings.blitz_allocation_pct);
     setTickers(tickersData);
     setIsLoading(false);
   };
@@ -52,7 +54,8 @@ export const SettingsPage = () => {
   const handleSaveWalletConfig = async () => {
     if (!userProfile?.id) return;
     setIsSaving(true);
-    const { error } = await updateUserSettings(userProfile.id, isStrict);
+    
+    const { error } = await updateUserSettings(userProfile.id, isStrict, blitzAllocation);
     
     if (error) {
       showToast('SYSTEM ERROR', 'Failed to update preferences.', 'error');
@@ -83,13 +86,12 @@ export const SettingsPage = () => {
 
   const handleToggleTicker = async (id: string, currentStatus: boolean) => {
     const newStatus = !currentStatus;
-    // Optimistic UI update
     setTickers(prev => prev.map(t => t.id === id ? { ...t, is_active: newStatus } : t));
     
     const { error } = await toggleTickerActive(id, newStatus);
     if (error) {
       showToast('SYSTEM ERROR', 'Failed to toggle ticker status.', 'error');
-      await loadData(); // Revert on failure
+      await loadData();
     }
   };
 
@@ -142,14 +144,14 @@ export const SettingsPage = () => {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
           
-          {/* PANEELI 1: Execution Environment */}
+          {/* PANEELI 1: Execution Environment & Strategy Allocation */}
           <div style={{ background: 'var(--c-card)', padding: '2.5rem', borderRadius: 'var(--radius-sharp)', border: '1px solid rgba(255,255,255,0.05)' }}>
             <Heading level={3} spacing="sm">Execution Environment</Heading>
             <Text as="p" variant="muted" size="sm" style={{ marginBottom: '1.5rem' }}>
-              Toggle between realistic capital constraints and sandbox mode for strategy testing.
+              Configure capital constraints and algorithmic portfolio allocation limits.
             </Text>
             
-            <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sharp)', border: '1px solid rgba(255,255,255,0.02)', marginBottom: '2rem' }}>
+            <div style={{ padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sharp)', border: '1px solid rgba(255,255,255,0.02)', marginBottom: '1.5rem' }}>
               <Checkbox 
                 label="Strict Wallet Mode (Enforce liquidity constraints)" 
                 checked={isStrict}
@@ -157,8 +159,30 @@ export const SettingsPage = () => {
               />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button variant="primary" onClick={handleSaveWalletConfig} disabled={isSaving}>
+            <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sharp)', border: '1px solid rgba(255,255,255,0.02)', marginBottom: '2rem' }}>
+              <Heading level={4} spacing="sm">Strategy Allocation (Blitz)</Heading>
+              <Text as="p" variant="muted" size="sm" style={{ marginBottom: '1rem' }}>
+                Set the maximum percentage of total liquidity allocated to the high-frequency BLITZ strategy. The remainder is reserved for CORE positions.
+              </Text>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  max="100" 
+                  value={blitzAllocation} 
+                  onChange={(e) => setBlitzAllocation(Number(e.target.value))}
+                  style={{ width: '100px', marginBottom: 0, textAlign: 'center' }}
+                />
+                <Text variant="primary" size="lg">%</Text>
+              </div>
+            </div>
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+              <Button 
+                variant="primary" 
+                onClick={handleSaveWalletConfig}
+                disabled={isSaving}
+              >
                 {isSaving ? 'Saving...' : 'Save Configuration'}
               </Button>
             </div>
@@ -171,7 +195,6 @@ export const SettingsPage = () => {
               Define the assets tracked by the Python engine. Pausing an asset excludes it from daily screening and AI oracle predictions.
             </Text>
 
-            {/* Uuden osakkeen lisäyslomake */}
             <form onSubmit={handleAddTicker} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'end', marginBottom: '3rem', padding: '1.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sharp)' }}>
               <Input 
                 label="Symbol (e.g. AAPL)" 
@@ -195,11 +218,10 @@ export const SettingsPage = () => {
                 style={{ marginBottom: 0 }}
               />
               <Button type="submit" variant="copper" disabled={isAdding} style={{ height: '42px', marginBottom: '1.5rem' }}>
-                {isAdding ? 'Adding...' : '+ Add Asset'}
+                {isAdding ? 'Adding...' : 'Add Asset'}
               </Button>
             </form>
 
-            {/* Olemassa olevien osakkeiden lista */}
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               <FlexTable data={tickers} columns={columns} keyExtractor={(item) => item.id} />
             </div>

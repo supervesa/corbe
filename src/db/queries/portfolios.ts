@@ -7,11 +7,13 @@ export interface PortfolioTicker {
   shares: number;
   average_buy_price: number;
   added_at: string;
-  current_price?: number; // <-- LISÄTTY: Elävä markkinahinta!
+  current_price?: number; 
+  strategy_type: 'core' | 'blitz'; 
+  acquired_by: string;             
+  name?: string; // <-- LISÄTTY: Osakkeen selkokielinen nimi
 }
 
 export async function fetchActivePortfolio(userId: string): Promise<PortfolioTicker[]> {
-  // 1. Hae käyttäjän salkku
   const { data: portfolio, error } = await corbeClient
     .from('portfolio_tickers')
     .select('*')
@@ -23,20 +25,20 @@ export async function fetchActivePortfolio(userId: string): Promise<PortfolioTic
     return [];
   }
 
-  // 2. Hae salkussa olevien osakkeiden LIVENÄ elävät hinnat Eteisen taulusta
   const symbols = portfolio.map(p => p.symbol);
-  const { data: marketData } = await corbeClient
-    .from('staging_tickers')
-    .select('symbol, price')
-    .in('symbol', symbols);
 
-  // Tehdään hinnoista helppo hakukartta (Map)
-  const priceMap = new Map(marketData?.map(m => [m.symbol, Number(m.price)]) || []);
+  // Haetaan rinnakkain hinnat Eteisestä JA nimet Universumi-taulusta
+  const [marketRes, configRes] = await Promise.all([
+    corbeClient.from('staging_tickers').select('symbol, price').in('symbol', symbols),
+    corbeClient.from('config_tickers').select('symbol, name').in('symbol', symbols)
+  ]);
 
-  // 3. Yhdistetään salkun data ja elävä hinta
+  const priceMap = new Map(marketRes.data?.map(m => [m.symbol, Number(m.price)]) || []);
+  const nameMap = new Map(configRes.data?.map(c => [c.symbol, c.name]) || []);
+
   return portfolio.map(p => ({
     ...p,
-    // Jos hintaa ei jostain syystä löydy, näytetään viimeisin keskihinta
-    current_price: priceMap.get(p.symbol) || Number(p.average_buy_price)
+    current_price: priceMap.get(p.symbol) || Number(p.average_buy_price),
+    name: nameMap.get(p.symbol) || p.symbol // Jos nimeä ei löydy, näytetään symboli
   }));
 }

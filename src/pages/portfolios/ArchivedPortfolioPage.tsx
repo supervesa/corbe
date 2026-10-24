@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { corbeClient } from '../../db/corbeClient';
 import { useSentinel } from '../../contexts/SentinelContext';
 import { Loader } from '../../ui/Loader';
-import { Heading, Text, Prose } from '../../ui/Typography';
+import { Heading, Text, Prose, Tag } from '../../ui/Typography';
 import { FlexTable, type ColumnDef } from '../../ui/FlexTable';
 
 interface ArchivedTicker {
@@ -11,6 +11,9 @@ interface ArchivedTicker {
   symbol: string;
   total_profit_loss_eur: number;
   archived_at: string;
+  strategy_type: 'core' | 'blitz';
+  archived_by: string;
+  name?: string; // Haetaan lennosta
 }
 
 export const ArchivedPortfolioPage = () => {
@@ -22,23 +25,67 @@ export const ArchivedPortfolioPage = () => {
     const loadData = async () => {
       if (!userProfile?.id) return;
       setIsLoading(true);
+      
+      // 1. Hae arkistoidut rivit
       const { data: archived } = await corbeClient
         .from('archived_portfolio')
         .select('*')
         .eq('user_id', userProfile.id)
         .order('archived_at', { ascending: false });
       
-      setData(archived as ArchivedTicker[] || []);
+      if (!archived || archived.length === 0) {
+        setData([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Hae oikeat yhtiönimet Universumista
+      const symbols = archived.map(a => a.symbol);
+      const { data: config } = await corbeClient
+        .from('config_tickers')
+        .select('symbol, name')
+        .in('symbol', symbols);
+
+      const nameMap = new Map(config?.map(c => [c.symbol, c.name]) || []);
+
+      // 3. Rikasta data nimillä
+      const enriched = archived.map(a => ({
+        ...a,
+        name: nameMap.get(a.symbol) || a.symbol
+      }));
+
+      setData(enriched as ArchivedTicker[]);
       setIsLoading(false);
     };
+
     loadData();
   }, [userProfile?.id]);
 
   const columns: ColumnDef<ArchivedTicker>[] = [
     {
-      header: 'Asset (Symbol)',
+      header: 'Asset',
       flex: 2,
-      render: (row) => <Text variant="primary" tabular>{row.symbol}</Text>
+      render: (row) => (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <Text variant="primary">{row.name}</Text>
+          <Text variant="muted" size="sm" tabular>{row.symbol}</Text>
+        </div>
+      )
+    },
+    { 
+      header: 'Strategy', 
+      flex: 1.2, 
+      render: (row) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Tag 
+            label={row.strategy_type?.toUpperCase() || 'CORE'} 
+            variant={row.strategy_type === 'blitz' ? 'copper' : 'default'} 
+          />
+          {row.archived_by === 'harry_the_broker' && (
+            <span title="Sold by Harry the Broker" style={{ fontSize: '1.2rem' }}>🤖</span>
+          )}
+        </div>
+      ) 
     },
     {
       header: 'Realized P&L',

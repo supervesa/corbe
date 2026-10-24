@@ -1,4 +1,6 @@
+// src/widgets/AssetTerminalModal/index.tsx
 import React, { useEffect, useState } from 'react';
+import { Shield, Zap } from 'lucide-react';
 import { Modal } from '../../ui/Modal';
 import { Button } from '../../ui/Button';
 import { Text, Heading, Tag } from '../../ui/Typography';
@@ -20,8 +22,8 @@ interface AssetTerminalProps {
   walletBalance: number;
   isStrict: boolean;
   onTradeSuccess: () => void;
-  companySummary?: string; // <-- LISÄTTY
-  themeMatch?: string;     // <-- LISÄTTY
+  companySummary?: string; 
+  themeMatch?: string;     
 }
 
 export const AssetTerminalModal = ({
@@ -38,6 +40,7 @@ export const AssetTerminalModal = ({
   const [isLoading, setIsLoading] = useState(true);
 
   const [tradeMode, setTradeMode] = useState<'buy' | 'sell'>('buy');
+  const [strategy, setStrategy] = useState<'core' | 'blitz'>('core');
   const [tradeAmount, setTradeAmount] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -50,6 +53,7 @@ export const AssetTerminalModal = ({
       });
       setTradeAmount('');
       setTradeMode(currentShares > 0 ? 'sell' : 'buy');
+      setStrategy('core');
       setActiveTab('intelligence');
     }
   }, [isOpen, symbol, currentShares]);
@@ -85,13 +89,14 @@ export const AssetTerminalModal = ({
 
     const { error } = await executeTrade(
       userId, tickerId, symbol, tradeMode, 
-      estimatedEur, estimatedShares, currentShares, currentAvgPrice
+      estimatedEur, estimatedShares, currentShares, currentAvgPrice,
+      strategy
     );
 
     if (error) {
       showToast('ERROR', 'Trade execution failed.', 'error');
     } else {
-      showToast('ORDER FILLED', `${tradeMode.toUpperCase()} executed for ${symbol}.`, 'success');
+      showToast('ORDER FILLED', `${tradeMode.toUpperCase()} executed for ${symbol} (${strategy.toUpperCase()}).`, 'success');
       onTradeSuccess();
       onClose();
     }
@@ -137,7 +142,6 @@ export const AssetTerminalModal = ({
           {/* VASEN SARAKE: INTELLIGENCE */}
           <div className={`terminal-col-left terminal-tab-content ${activeTab === 'trade' ? 'hide-on-mobile' : ''}`}>
             
-            {/* UUSI: AI Yhtiöprofiili (Näkyy vain jos dataa on, eli Eteisessä) */}
             {(companySummary || themeMatch) && (
               <div className="terminal-panel" style={{ borderLeft: '2px solid var(--c-copper)', marginBottom: '1.5rem' }}>
                 <Heading level={4} spacing="sm">AI Company Profiler</Heading>
@@ -200,7 +204,7 @@ export const AssetTerminalModal = ({
           {/* OIKEA SARAKE: TRADE */}
           <div className={`terminal-col-right terminal-tab-content ${activeTab === 'intelligence' ? 'hide-on-mobile' : ''}`}>
             
-            <div className="terminal-tabs" style={{ display: 'flex', marginBottom: '2rem' }}>
+            <div className="terminal-tabs" style={{ display: 'flex', marginBottom: '1rem' }}>
               <button 
                 className={`terminal-tab-btn ${!isSell ? 'active' : 'inactive'}`}
                 onClick={() => { setTradeMode('buy'); setTradeAmount(''); }}
@@ -212,6 +216,26 @@ export const AssetTerminalModal = ({
                 style={{ opacity: currentShares > 0 ? 1 : 0.4, cursor: currentShares > 0 ? 'pointer' : 'not-allowed' }}
               >SELL</button>
             </div>
+
+            {/* STRATEGIA - KYTKIN (Core / Blitz) Puhdas Lucide-ikoneilla */}
+            {!isSell && (
+              <div className="terminal-tabs" style={{ display: 'flex', marginBottom: '2rem' }}>
+                <button 
+                  className={`terminal-tab-btn ${strategy === 'core' ? 'active' : 'inactive'}`}
+                  onClick={() => setStrategy('core')}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  <Shield size={16} /> CORE
+                </button>
+                <button 
+                  className={`terminal-tab-btn ${strategy === 'blitz' ? 'active' : 'inactive'}`}
+                  onClick={() => setStrategy('blitz')}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  <Zap size={16} /> BLITZ
+                </button>
+              </div>
+            )}
 
             <div style={{ marginBottom: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
