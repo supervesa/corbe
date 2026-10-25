@@ -76,3 +76,47 @@
     font-size: 0.85rem;
     color: var(--c-text-muted);
   }
+/* src/ui/FormUI.css (Lisää nämä loppuun) */
+
+/* 1. PIILOTETAAN SELAIMEN RUMAT YLÖS/ALAS NUOLET KAIKISTA NUMEROKENTISTÄ */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox-tuki */
+  appearance: textfield;      /* Standardituki (korjaa varoituksen) */
+}
+
+/* 2. CHIP (Pikavalinta) TYYLIT */
+.corbe-chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.corbe-chip {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--c-text-muted);
+  border-radius: var(--radius-sharp);
+  padding: 0.5rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.corbe-chip:hover {
+  border-color: var(--c-copper);
+  color: var(--c-copper);
+  background: rgba(125, 75, 58, 0.05);
+}
+
+.corbe-chip:active {
+  transform: scale(0.95);
+}
+  
